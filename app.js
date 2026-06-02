@@ -144,17 +144,15 @@ function saveSession() {
   localStorage.setItem(
     SESSION_STORAGE_KEY,
     JSON.stringify({
-    target: state.sessionTarget,
-    reviewed: [...state.sessionReviewed],
-    learned: [...state.sessionLearned],
-    difficult: [...state.sessionDifficult],
-
-    streak: state.streak,
-    lastStudyDate: state.lastStudyDate
-})
+      target: state.sessionTarget,
+      reviewed: [...state.sessionReviewed],
+      learned: [...state.sessionLearned],
+      difficult: [...state.sessionDifficult],
+      streak: state.streak,
+      lastStudyDate: state.lastStudyDate
+    })
   );
 }
-
 function favoriteKey(word) {
   return String(word.id);
 }
