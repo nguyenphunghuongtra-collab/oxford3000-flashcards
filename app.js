@@ -1,4 +1,6 @@
 const state = {
+  streak: 0,
+lastStudyDate: null,
   words: [],
   filtered: [],
   index: 0,
@@ -124,11 +126,16 @@ function loadSession() {
     state.sessionReviewed = new Set((savedSession.reviewed || []).map(String));
     state.sessionLearned = new Set((savedSession.learned || []).map(String));
     state.sessionDifficult = new Set((savedSession.difficult || []).map(String));
+
+    state.streak = savedSession.streak || 0;
+    state.lastStudyDate = savedSession.lastStudyDate || null;
   } catch (_) {
     state.sessionTarget = 20;
     state.sessionReviewed = new Set();
     state.sessionLearned = new Set();
     state.sessionDifficult = new Set();
+    state.streak = 0;
+    state.lastStudyDate = null;
   }
 }
 
@@ -136,10 +143,14 @@ function saveSession() {
   localStorage.setItem(
     SESSION_STORAGE_KEY,
     JSON.stringify({
-      target: state.sessionTarget,
-      reviewed: [...state.sessionReviewed],
-      learned: [...state.sessionLearned],
-      difficult: [...state.sessionDifficult],
+    target: state.sessionTarget,
+    reviewed: [...state.sessionReviewed],
+    learned: [...state.sessionLearned],
+    difficult: [...state.sessionDifficult],
+
+    streak: state.streak,
+    lastStudyDate: state.lastStudyDate
+})
     })
   );
 }
@@ -589,6 +600,43 @@ function toggleDifficultFilter() {
   applyFilters();
 }
 
+function updateDailyStreak() {
+  const today = new Date().toISOString().split("T")[0];
+
+  if (!state.lastStudyDate) {
+    state.streak = 1;
+    state.lastStudyDate = today;
+  } else {
+    const last = new Date(state.lastStudyDate);
+    const now = new Date(today);
+
+    const diffDays = Math.floor(
+      (now - last) / (1000 * 60 * 60 * 24)
+    );
+
+    if (diffDays === 1) {
+      state.streak += 1;
+      state.lastStudyDate = today;
+    } else if (diffDays > 1) {
+      state.streak = 1;
+      state.lastStudyDate = today;
+    }
+  }
+
+  localStorage.setItem("dailyStreak", state.streak);
+  localStorage.setItem("lastStudyDate", state.lastStudyDate);
+
+  updateStreakUi();
+}
+
+function updateStreakUi() {
+  const streakElement = document.querySelector("#streak-count");
+
+  if (streakElement) {
+    streakElement.textContent =
+      `🔥 ${state.streak} Day Streak`;
+  }
+}
 function toggleLearned(event) {
   event.stopPropagation();
 
@@ -604,6 +652,8 @@ function toggleLearned(event) {
   } else {
     state.learnedWords.add(key);
     state.sessionLearned.add(key);
+
+    updateDailyStreak();
   }
 
   saveLearnedWords();
@@ -730,5 +780,6 @@ loadFavorites();
 loadDifficultWords();
 loadLearnedWords();
 loadSession();
+updateDailyStreak();
 bindEvents();
 loadWords();
