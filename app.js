@@ -52,6 +52,7 @@ const elements = {
   sessionMeter: document.querySelector(".session-meter"),
   sessionProgressFill: document.querySelector("#session-progress-fill"),
   resetSessionButton: document.querySelector("#reset-session-button"),
+  dailyStreak: document.querySelector("#daily-streak"),
   speakerButton: document.querySelector("#speaker-button"),
   audioStatus: document.querySelector("#audio-status"),
   backMeaning: document.querySelector("#back-meaning"),
@@ -630,7 +631,7 @@ function updateDailyStreak() {
 }
 
 function updateStreakUi() {
-  const streakElement = document.querySelector("#streak-count");
+  const streakElement = document.querySelector("#daily-streak");
 
   if (streakElement) {
     streakElement.textContent =
