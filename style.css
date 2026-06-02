@@ -593,10 +593,15 @@ h1 {
 
 .word {
   max-width: 100%;
-  overflow-wrap: anywhere;
+
+  word-break: keep-all;
+  overflow-wrap: normal;
+
   color: var(--text);
-  font-size: clamp(3.2rem, 9vw, 6.8rem);
-  line-height: 0.98;
+
+  font-size: clamp(2.5rem, 6vw, 5rem);
+
+  line-height: 1;
   font-weight: 850;
   text-align: center;
 }
