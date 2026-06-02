@@ -152,7 +152,6 @@ function saveSession() {
     streak: state.streak,
     lastStudyDate: state.lastStudyDate
 })
-    })
   );
 }
 
