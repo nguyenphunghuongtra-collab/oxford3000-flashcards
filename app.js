@@ -653,11 +653,13 @@ function toggleLearned(event) {
     state.learnedWords.add(key);
     state.sessionLearned.add(key);
 
-    updateDailyStreak();
   }
 
   saveLearnedWords();
   saveSession();
+  
+  updateDailyStreak();
+  
   updateLearnedUi(word);
   updateProgressUi();
   updateSessionUi();
