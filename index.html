@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Oxford 3000 Flashcards</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar" aria-label="Vocabulary controls">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">O3</span>
+          <div>
+            <h1>Oxford 3000</h1>
+            <p id="card-count">Loading...</p>
+          </div>
+        </div>
+
+        <button class="icon-button theme-toggle" id="theme-toggle" type="button" aria-label="Toggle dark mode">
+          <span class="sun" aria-hidden="true"></span>
+          <span class="moon" aria-hidden="true"></span>
+        </button>
+      </header>
+
+      <section class="controls" aria-label="Search and filter">
+        <label class="search-field">
+          <span class="search-icon" aria-hidden="true"></span>
+          <input id="search-input" type="search" placeholder="Search words, meanings, examples" autocomplete="off" />
+        </label>
+
+        <div class="level-tabs" id="level-tabs" role="tablist" aria-label="CEFR level">
+          <button class="level-tab active" type="button" data-level="All">All</button>
+          <button class="level-tab" type="button" data-level="A1">A1</button>
+          <button class="level-tab" type="button" data-level="A2">A2</button>
+          <button class="level-tab" type="button" data-level="B1">B1</button>
+          <button class="level-tab" type="button" data-level="B2">B2</button>
+        </div>
+
+        <button class="favorite-filter" id="favorite-filter-button" type="button" aria-pressed="false">
+          <span class="star-icon" aria-hidden="true"></span>
+          Favorites
+          <span id="favorite-count">0</span>
+        </button>
+
+        <button class="difficult-filter" id="difficult-filter-button" type="button" aria-pressed="false">
+          <span class="flag-icon" aria-hidden="true"></span>
+          Difficult
+          <span id="difficult-count">0</span>
+        </button>
+      </section>
+
+      <section class="progress-dashboard" aria-label="Learning progress">
+        <div class="progress-stat">
+          <span class="progress-label">Learned</span>
+          <strong id="learned-count">0</strong>
+        </div>
+        <div class="progress-stat">
+          <span class="progress-label">Remaining</span>
+          <strong id="remaining-count">0</strong>
+        </div>
+        <div class="progress-stat">
+          <span class="progress-label">Percentage</span>
+          <strong id="progress-percent">0%</strong>
+        </div>
+        <div class="progress-meter" role="progressbar" aria-label="Learning progress bar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <span id="progress-fill"></span>
+        </div>
+      </section>
+
+      <section class="session-panel" aria-label="Study session">
+        <div class="session-header">
+          <div>
+            <h2>Study Session</h2>
+            <p id="session-target-status">0 / 20 completed</p>
+          </div>
+          <button class="reset-session-button" id="reset-session-button" type="button">Reset Session</button>
+        </div>
+
+        <div class="target-options" id="target-options" aria-label="Daily target">
+          <button class="target-option" type="button" data-target="10">10</button>
+          <button class="target-option active" type="button" data-target="20">20</button>
+          <button class="target-option" type="button" data-target="50">50</button>
+          <button class="target-option" type="button" data-target="100">100</button>
+        </div>
+
+        <div class="session-summary">
+          <div class="session-stat">
+            <span class="progress-label">Total reviewed</span>
+            <strong id="session-reviewed-count">0</strong>
+          </div>
+          <div class="session-stat">
+            <span class="progress-label">Learned</span>
+            <strong id="session-learned-count">0</strong>
+          </div>
+          <div class="session-stat">
+            <span class="progress-label">Difficult</span>
+            <strong id="session-difficult-count">0</strong>
+          </div>
+        </div>
+
+        <div class="session-meter" role="progressbar" aria-label="Daily target progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <span id="session-progress-fill"></span>
+        </div>
+      </section>
+
+      <section class="study-area" aria-live="polite">
+        <div class="flashcard" id="flashcard" role="button" tabindex="0" aria-label="Flip card">
+          <span class="card-face card-front">
+            <button class="favorite-button" id="favorite-button" type="button" aria-label="Add to favorites">
+              <span class="star-icon" aria-hidden="true"></span>
+            </button>
+            <span class="level-pill" id="front-level"></span>
+            <span class="word-row">
+              <span class="word" id="front-word"></span>
+              <button class="speaker-button" id="speaker-button" type="button" aria-label="Play pronunciation">
+                <span class="speaker-icon" aria-hidden="true"></span>
+              </button>
+            </span>
+            <span class="ipa" id="front-ipa"></span>
+            <span class="audio-status" id="audio-status" aria-live="polite"></span>
+          </span>
+
+          <span class="card-face card-back">
+            <span class="back-grid">
+              <span class="field">
+                <span class="field-label">Meaning</span>
+                <span class="field-value" id="back-meaning"></span>
+              </span>
+              <span class="field">
+                <span class="field-label">Definition</span>
+                <span class="field-value" id="back-definition"></span>
+              </span>
+              <span class="field">
+                <span class="field-label">Example</span>
+                <span class="field-value" id="back-example-en"></span>
+              </span>
+              <span class="field">
+                <span class="field-label">Translation</span>
+                <span class="field-value" id="back-example-vi"></span>
+              </span>
+            </span>
+          </span>
+        </div>
+
+        <div class="empty-state" id="empty-state" hidden>
+          <h2>No words found</h2>
+          <p>Try another search or level.</p>
+        </div>
+      </section>
+
+      <footer class="nav-controls" aria-label="Card navigation">
+        <button class="nav-button" id="prev-button" type="button">
+          <span class="chevron left" aria-hidden="true"></span>
+          Previous
+        </button>
+        <button class="nav-button random" id="random-button" type="button">
+          <span class="shuffle-icon" aria-hidden="true"></span>
+          Random
+        </button>
+        <button class="nav-button difficult-toggle" id="difficult-button" type="button" aria-pressed="false">
+          <span class="flag-icon" aria-hidden="true"></span>
+          <span id="difficult-button-label">Mark as Difficult</span>
+        </button>
+        <button class="nav-button learned-toggle" id="learned-button" type="button" aria-pressed="false">
+          <span class="check-icon" aria-hidden="true"></span>
+          <span id="learned-button-label">Mark as Learned</span>
+        </button>
+        <button class="nav-button" id="next-button" type="button">
+          Next
+          <span class="chevron right" aria-hidden="true"></span>
+        </button>
+      </footer>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
