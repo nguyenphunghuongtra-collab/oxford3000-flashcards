@@ -950,3 +950,9 @@ h1 {
   font-size: 1.1rem;
   font-weight: 700;
 }
+.brand-subtitle {
+  margin: 2px 0 6px;
+  font-size: 0.85rem;
+  color: #6b7280;
+  font-weight: 500;
+}
