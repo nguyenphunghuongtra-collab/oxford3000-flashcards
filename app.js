@@ -696,22 +696,31 @@ function randomCard() {
   render();
 }
 
-async function loadWords() {
+async function loadWords(deckFile = "oxford3000") {
   try {
-    const response = await fetch("words.json");
+
+    const response = await fetch(`decks/${deckFile}.json`);
+
     if (!response.ok) {
-      throw new Error(`Could not load words.json: ${response.status}`);
+      throw new Error(`Could not load ${deckFile}.json: ${response.status}`);
     }
 
     state.words = await response.json();
     state.filtered = [...state.words];
+
+    state.index = 0;
+    state.flipped = false;
+
     render();
+
   } catch (error) {
-    elements.count.textContent = "Could not load words.json";
+
+    elements.count.textContent = "Could not load deck";
     elements.flashcard.hidden = true;
     elements.emptyState.hidden = false;
     elements.emptyState.querySelector("h2").textContent = "Data unavailable";
     elements.emptyState.querySelector("p").textContent = error.message;
+
   }
 }
 
@@ -740,7 +749,13 @@ function bindEvents() {
     state.search = event.target.value;
     applyFilters();
   });
+const deckSelect = document.getElementById("deck-select");
 
+if (deckSelect) {
+  deckSelect.addEventListener("change", (event) => {
+    loadWords(event.target.value);
+  });
+}
   elements.levelTabs.addEventListener("click", (event) => {
     const button = event.target.closest("[data-level]");
     if (!button) {
