@@ -188,7 +188,9 @@ function applyFilters() {
   const query = state.search.trim().toLowerCase();
 
   state.filtered = state.words.filter((word) => {
-    const levelMatches = state.level === "All" || word.level === state.level;
+  const levelMatches =
+  state.level === "All" ||
+  word.level.includes(state.level);
     const searchMatches = !query || searchableText(word).includes(query);
     const favoriteMatches = !state.showFavorites || isFavorite(word);
     const difficultMatches = !state.showDifficult || isDifficult(word);
