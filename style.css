@@ -655,6 +655,8 @@ body::before {
    padding: 3px 10px;
    border-radius: var(--radius-pill);
    display: inline-block;
+   text-align: center;
+   align-self: center;
 }
 
 .audio-status {
