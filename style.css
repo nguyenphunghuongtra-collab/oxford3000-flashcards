@@ -69,7 +69,7 @@ html {
 
 body {
   font-family: var(--font-body);
-  background: var(--bg);
+  background: #e8e0d4;  /* ← đổi thành màu này */
   color: var(--text);
   min-height: 100dvh;
   line-height: 1.5;
@@ -94,6 +94,9 @@ body::before {
   padding: 0 16px 100px;
   position: relative;
   z-index: 1;
+   min-height: 100dvh;
+   box-shadow: 0 0 60px (44,31,20,0.08)
+   background: var (--bg);
 }
 
 /* ── TOPBAR ── */
