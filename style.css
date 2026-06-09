@@ -1011,7 +1011,7 @@ body::before {
   box-shadow: var(--card-shadow);
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   gap: 16px;
   width: 100%;
 }
@@ -1021,6 +1021,7 @@ body::before {
   flex-direction: column;
   gap: 10px;
   width: 100%;
+  align-self: stretch;
 }
 
 #quiz-area .quiz-option {
