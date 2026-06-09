@@ -1,5 +1,6 @@
 const state = {
   streak: 0,
+  currentDeck: "oxford3000",
 lastStudyDate: null,
   words: [],
   filtered: [],
@@ -258,7 +259,8 @@ function updateLearnedUi(word) {
 
 function updateProgressUi() {
   const total = state.words.length;
-  const learned = state.learnedWords.size;
+  const wordIds = new Set(state.words.map(w => String(w.id)));
+  const learned = [...state.learnedWords].filter(id => wordIds.has(id)).length;
   const remaining = Math.max(total - learned, 0);
   const percentage = total ? Math.round((learned / total) * 100) : 0;
 
@@ -699,8 +701,8 @@ function randomCard() {
 }
 
 async function loadWords(deckFile = "oxford3000") {
+  state.currentDeck = deckFile;
   try {
-
     const response = await fetch(`decks/${deckFile}.json`);
 
     if (!response.ok) {
@@ -714,6 +716,7 @@ async function loadWords(deckFile = "oxford3000") {
     state.flipped = false;
 
     render();
+    updateProgressUi();
 
   } catch (error) {
 
