@@ -813,3 +813,19 @@ body::before {
   justify-content: center;
   margin-top: 8px;
 }
+@media (max-width: 430px) {
+  .nav-button {
+    font-size: 11px;
+    padding: 10px 6px;
+    gap: 3px;
+  }
+  
+  #prev-button, #next-button {
+    flex: 0 0 40px;
+    min-width: 40px;
+  }
+  
+  #random-button, #difficult-button, #learned-button {
+    flex: 1;
+  }
+}
