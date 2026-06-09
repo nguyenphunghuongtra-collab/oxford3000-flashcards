@@ -806,3 +806,10 @@ body::before {
   }
   .flashcard { aspect-ratio: 4 / 3; }
 }
+.ipa-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 8px;
+}
