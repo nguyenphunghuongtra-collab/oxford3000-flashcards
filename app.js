@@ -1,7 +1,9 @@
 const state = {
   streak: 0,
+  lastStudyDate: null,
   currentDeck: "oxford3000",
-lastStudyDate: null,
+  quizMode: false,
+  quizQuestion: null,
   words: [],
   filtered: [],
   index: 0,
@@ -703,6 +705,7 @@ function randomCard() {
 async function loadWords(deckFile = "oxford3000") {
   state.currentDeck = deckFile;
   try {
+
     const response = await fetch(`decks/${deckFile}.json`);
 
     if (!response.ok) {
@@ -729,6 +732,178 @@ async function loadWords(deckFile = "oxford3000") {
   }
 }
 
+// ── QUIZ MODE ──────────────────────────────────────────
+
+function getQuizPool() {
+  // Chỉ dùng từ đã learned trong session hiện tại
+  return state.words.filter(w => state.sessionLearned.has(String(w.id)));
+}
+
+function getRandomDistractors(correctWord, pool, count = 3) {
+  const others = pool.filter(w => w.id !== correctWord.id);
+  const shuffled = others.sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+}
+
+function buildQuizQuestion(pool) {
+  if (pool.length < 4) return null;
+
+  const correct = pool[Math.floor(Math.random() * pool.length)];
+  const distractors = getRandomDistractors(correct, pool, 3);
+  const type = Math.random() < 0.5 ? "word-to-meaning" : "meaning-to-word";
+
+  let options;
+  if (type === "word-to-meaning") {
+    options = [
+      { text: correct.meaning_vi.split("\n")[0], correct: true },
+      ...distractors.map(w => ({ text: w.meaning_vi.split("\n")[0], correct: false }))
+    ];
+  } else {
+    options = [
+      { text: correct.word, correct: true },
+      ...distractors.map(w => ({ text: w.word, correct: false }))
+    ];
+  }
+
+  options = options.sort(() => Math.random() - 0.5);
+
+  return { correct, type, options, answered: false, answeredCorrect: false };
+}
+
+function renderQuiz() {
+  const quizArea = document.getElementById("quiz-area");
+  const studyArea = document.querySelector(".study-area");
+  const navControls = document.querySelector(".nav-controls");
+
+  if (!state.quizMode) {
+    quizArea.hidden = true;
+    studyArea.hidden = false;
+    navControls.innerHTML = `
+      <button class="nav-button" id="prev-button" type="button"><span class="chevron left" aria-hidden="true"></span></button>
+      <button class="nav-button random" id="random-button" type="button"><span class="shuffle-icon" aria-hidden="true"></span> Random</button>
+      <button class="nav-button difficult-toggle" id="difficult-button" type="button" aria-pressed="false"><span class="flag-icon" aria-hidden="true"></span><span id="difficult-button-label">Difficult</span></button>
+      <button class="nav-button learned-toggle" id="learned-button" type="button" aria-pressed="false"><span class="check-icon" aria-hidden="true"></span><span id="learned-button-label">Learned</span></button>
+      <button class="nav-button" id="next-button" type="button"><span class="chevron right" aria-hidden="true"></span></button>
+      <button class="nav-button quiz-toggle" id="quiz-toggle-button" type="button">⊞ Quiz</button>
+    `;
+    rebindNavEvents();
+    render();
+    return;
+  }
+
+  const pool = getQuizPool();
+  studyArea.hidden = true;
+  quizArea.hidden = false;
+
+  if (pool.length < 4) {
+    quizArea.innerHTML = `
+      <div class="empty-state">
+        <h2>Cần ít nhất 4 từ đã học</h2>
+        <p>Hãy học thêm từ trong session này trước khi làm quiz!</p>
+      </div>
+    `;
+    navControls.innerHTML = `
+      <button class="nav-button quiz-toggle active" id="quiz-toggle-button" type="button">✕ Thoát Quiz</button>
+    `;
+    rebindNavEvents();
+    return;
+  }
+
+  if (!state.quizQuestion || state.quizQuestion.answered) {
+    state.quizQuestion = buildQuizQuestion(pool);
+  }
+
+  const q = state.quizQuestion;
+  if (!q) return;
+
+  const prompt = q.type === "word-to-meaning"
+    ? `<div class="quiz-prompt-word">${q.correct.word}</div><div class="quiz-ipa">${q.correct.ipa || ""}</div><div class="quiz-instruction">Nghĩa của từ này là gì?</div>`
+    : `<div class="quiz-prompt-meaning">${q.correct.meaning_vi.split("\n")[0]}</div><div class="quiz-instruction">Từ tiếng Anh nào có nghĩa trên?</div>`;
+
+  const optionsHtml = q.options.map((opt, i) => {
+    let cls = "quiz-option";
+    if (q.answered) {
+      if (opt.correct) cls += " correct";
+      else if (i === q.chosenIndex) cls += " wrong";
+      else cls += " dim";
+    }
+    return `<button class="quiz-option ${q.answered ? (opt.correct ? "correct" : i === q.chosenIndex ? "wrong" : "dim") : ""}" data-index="${i}" ${q.answered ? "disabled" : ""}>${opt.text}</button>`;
+  }).join("");
+
+  const nextBtn = q.answered
+    ? `<button class="nav-button random" id="quiz-next-button" type="button">Câu tiếp theo →</button>`
+    : "";
+
+  quizArea.innerHTML = `
+    <div class="quiz-card">
+      <div class="quiz-type-pill">${q.type === "word-to-meaning" ? "Từ → Nghĩa" : "Nghĩa → Từ"}</div>
+      ${prompt}
+      <div class="quiz-options">${optionsHtml}</div>
+      ${q.answered ? `<div class="quiz-result ${q.answeredCorrect ? "quiz-correct-msg" : "quiz-wrong-msg"}">${q.answeredCorrect ? "✓ Chính xác!" : "✗ Sai rồi — đã thêm vào Difficult"}</div>` : ""}
+    </div>
+  `;
+
+  navControls.innerHTML = `
+    ${nextBtn}
+    <button class="nav-button quiz-toggle-exit" id="quiz-toggle-button" type="button">✕ Thoát Quiz</button>
+  `;
+
+  // Bind option clicks
+  quizArea.querySelectorAll(".quiz-option").forEach((btn, i) => {
+    btn.addEventListener("click", () => handleQuizAnswer(i));
+  });
+
+  rebindNavEvents();
+}
+
+function handleQuizAnswer(chosenIndex) {
+  const q = state.quizQuestion;
+  if (!q || q.answered) return;
+
+  q.answered = true;
+  q.chosenIndex = chosenIndex;
+  q.answeredCorrect = q.options[chosenIndex].correct;
+
+  if (!q.answeredCorrect) {
+    // Mark correct word as difficult
+    const key = String(q.correct.id);
+    state.difficultWords.add(key);
+    state.sessionDifficult.add(key);
+    saveDifficultWords();
+    saveSession();
+    updateSessionUi();
+  }
+
+  renderQuiz();
+}
+
+function toggleQuizMode() {
+  state.quizMode = !state.quizMode;
+  state.quizQuestion = null;
+  renderQuiz();
+}
+
+function rebindNavEvents() {
+  const prev = document.getElementById("prev-button");
+  const next = document.getElementById("next-button");
+  const random = document.getElementById("random-button");
+  const difficult = document.getElementById("difficult-button");
+  const learned = document.getElementById("learned-button");
+  const quizToggle = document.getElementById("quiz-toggle-button");
+  const quizNext = document.getElementById("quiz-next-button");
+
+  if (prev) prev.addEventListener("click", () => move(-1));
+  if (next) next.addEventListener("click", () => move(1));
+  if (random) random.addEventListener("click", randomCard);
+  if (difficult) difficult.addEventListener("click", toggleDifficult);
+  if (learned) learned.addEventListener("click", toggleLearned);
+  if (quizToggle) quizToggle.addEventListener("click", toggleQuizMode);
+  if (quizNext) quizNext.addEventListener("click", () => {
+    state.quizQuestion = null;
+    renderQuiz();
+  });
+}
+
 function bindEvents() {
   elements.themeToggle.addEventListener("click", toggleTheme);
 
@@ -744,9 +919,7 @@ function bindEvents() {
   elements.speakerButton.addEventListener("click", playPronunciation);
   elements.favoriteButton.addEventListener("click", toggleFavorite);
   elements.favoriteFilterButton.addEventListener("click", toggleFavoriteFilter);
-  elements.difficultButton.addEventListener("click", toggleDifficult);
   elements.difficultFilterButton.addEventListener("click", toggleDifficultFilter);
-  elements.learnedButton.addEventListener("click", toggleLearned);
   elements.targetOptions.addEventListener("click", setSessionTarget);
   elements.resetSessionButton.addEventListener("click", resetSession);
 
@@ -754,19 +927,17 @@ function bindEvents() {
     state.search = event.target.value;
     applyFilters();
   });
-const deckSelect = document.getElementById("deck-select");
 
-if (deckSelect) {
-  deckSelect.addEventListener("change", (event) => {
-    loadWords(event.target.value);
-  });
-}
+  const deckSelect = document.getElementById("deck-select");
+  if (deckSelect) {
+    deckSelect.addEventListener("change", (event) => {
+      loadWords(event.target.value);
+    });
+  }
+
   elements.levelTabs.addEventListener("click", (event) => {
     const button = event.target.closest("[data-level]");
-    if (!button) {
-      return;
-    }
-
+    if (!button) return;
     state.level = button.dataset.level;
     document.querySelectorAll(".level-tab").forEach((tab) => {
       tab.classList.toggle("active", tab === button);
@@ -774,25 +945,18 @@ if (deckSelect) {
     applyFilters();
   });
 
-  elements.prevButton.addEventListener("click", () => move(-1));
-  elements.nextButton.addEventListener("click", () => move(1));
-  elements.randomButton.addEventListener("click", randomCard);
-
   document.addEventListener("keydown", (event) => {
-    if (event.target.matches("input, button")) {
-      return;
-    }
-
-    if (event.key === "ArrowLeft") {
-      move(-1);
-    } else if (event.key === "ArrowRight") {
-      move(1);
-    } else if (event.key === " " || event.key === "Enter") {
+    if (event.target.matches("input, button")) return;
+    if (event.key === "ArrowLeft") move(-1);
+    else if (event.key === "ArrowRight") move(1);
+    else if (event.key === " " || event.key === "Enter") {
       event.preventDefault();
       state.flipped = !state.flipped;
       render();
     }
   });
+
+  rebindNavEvents();
 }
 
 restoreTheme();
