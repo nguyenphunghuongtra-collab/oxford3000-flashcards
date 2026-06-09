@@ -140,6 +140,7 @@
               <span class="star-icon" aria-hidden="true"></span>
             </button>
             <span class="level-pill" id="front-level"></span>
+          </span>
             <span class="word-row">
               <span class="word" id="front-word"></span>
               <button class="speaker-button" id="speaker-button" type="button" aria-label="Play pronunciation">
@@ -178,28 +179,26 @@
         </div>
       </section>
 
-      <footer class="nav-controls" aria-label="Card navigation">
-        <button class="nav-button" id="prev-button" type="button">
-          <span class="chevron left" aria-hidden="true"></span>
-          Previous
-        </button>
-        <button class="nav-button random" id="random-button" type="button">
-          <span class="shuffle-icon" aria-hidden="true"></span>
-          Random
-        </button>
-        <button class="nav-button difficult-toggle" id="difficult-button" type="button" aria-pressed="false">
-          <span class="flag-icon" aria-hidden="true"></span>
-          <span id="difficult-button-label">Mark as Difficult</span>
-        </button>
-        <button class="nav-button learned-toggle" id="learned-button" type="button" aria-pressed="false">
-          <span class="check-icon" aria-hidden="true"></span>
-          <span id="learned-button-label">Mark as Learned</span>
-        </button>
-        <button class="nav-button" id="next-button" type="button">
-          Next
-          <span class="chevron right" aria-hidden="true"></span>
-        </button>
-      </footer>
+<footer class="nav-controls" aria-label="Card navigation">
+  <button class="nav-button" id="prev-button" type="button">
+    <span class="chevron left" aria-hidden="true"></span>
+  </button>
+  <button class="nav-button random" id="random-button" type="button">
+    <span class="shuffle-icon" aria-hidden="true"></span>
+    Random
+  </button>
+  <button class="nav-button difficult-toggle" id="difficult-button" type="button" aria-pressed="false">
+    <span class="flag-icon" aria-hidden="true"></span>
+    <span id="difficult-button-label">Difficult</span>
+  </button>
+  <button class="nav-button learned-toggle" id="learned-button" type="button" aria-pressed="false">
+    <span class="check-icon" aria-hidden="true"></span>
+    <span id="learned-button-label">Learned</span>
+  </button>
+  <button class="nav-button" id="next-button" type="button">
+    <span class="chevron right" aria-hidden="true"></span>
+  </button>
+</footer>
     </main>
 <script>
   if ('serviceWorker' in navigator) {
