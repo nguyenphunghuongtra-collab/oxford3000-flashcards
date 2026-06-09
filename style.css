@@ -993,3 +993,7 @@ body::before {
     padding: 10px 8px;
   }
 }
+#quiz-area {
+  padding: 0 16px 16px;
+  margin-bottom: 80px;
+}
