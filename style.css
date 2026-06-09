@@ -1057,3 +1057,6 @@ body::before {
 }
 
 #quiz-area .quiz-option.dim { opacity: 0.4; }
+body{
+border:10px solid red !important;
+}
