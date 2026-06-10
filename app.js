@@ -4,6 +4,7 @@ const state = {
   currentDeck: "oxford3000",
   quizMode: false,
   quizQuestion: null,
+  quizSession: null,
   words: [],
   filtered: [],
   index: 0,
@@ -803,8 +804,44 @@ function renderQuiz() {
       </div>
     `;
     navControls.innerHTML = `
-      <button class="nav-button quiz-toggle active" id="quiz-toggle-button" type="button">✕ Thoát Quiz</button>
+      <button class="nav-button quiz-toggle-exit" id="quiz-toggle-button" type="button">✕ Thoát Quiz</button>
     `;
+    rebindNavEvents();
+    return;
+  }
+
+  // Init quiz session state
+  if (!state.quizSession) {
+    state.quizSession = { total: state.sessionTarget || 10, current: 0, correct: 0, wrong: 0 };
+  }
+
+  const qs = state.quizSession;
+
+  // Show scoreboard when done
+  if (qs.current >= qs.total) {
+    const pct = Math.round((qs.correct / qs.total) * 100);
+    const emoji = pct >= 80 ? "🎉" : pct >= 50 ? "👍" : "💪";
+    quizArea.innerHTML = `
+      <div class="quiz-scoreboard">
+        <div class="score-emoji">${emoji}</div>
+        <h2>Hoàn thành bài tập!</h2>
+        <div class="score-number">${pct}%</div>
+        <div class="score-sub">${qs.correct} / ${qs.total} câu đúng</div>
+        <div class="score-stats">
+          <div class="score-stat"><strong style="color:var(--sage)">${qs.correct}</strong><span>Đúng</span></div>
+          <div class="score-stat"><strong style="color:#c04040">${qs.wrong}</strong><span>Sai</span></div>
+        </div>
+        <button class="quiz-restart-btn" id="quiz-restart-btn">🔄 Làm lại bài tập</button>
+      </div>
+    `;
+    navControls.innerHTML = `
+      <button class="nav-button quiz-toggle-exit" id="quiz-toggle-button" type="button">✕ Thoát Quiz</button>
+    `;
+    document.getElementById("quiz-restart-btn").addEventListener("click", () => {
+      state.quizSession = null;
+      state.quizQuestion = null;
+      renderQuiz();
+    });
     rebindNavEvents();
     return;
   }
@@ -816,8 +853,10 @@ function renderQuiz() {
   const q = state.quizQuestion;
   if (!q) return;
 
+  const progressPct = Math.round((qs.current / qs.total) * 100);
+
   const prompt = q.type === "word-to-meaning"
-    ? `<div class="quiz-prompt-word">${q.correct.word}</div><div class="quiz-ipa">${q.correct.ipa || ""}</div><div class="quiz-instruction">Nghĩa của từ này là gì?</div>`
+    ? `<div class="quiz-prompt-word">${q.correct.word}</div>${q.correct.ipa ? `<div class="quiz-ipa">${q.correct.ipa}</div>` : ""}<div class="quiz-instruction">Nghĩa của từ này là gì?</div>`
     : `<div class="quiz-prompt-meaning">${q.correct.meaning_vi.split("\n")[0]}</div><div class="quiz-instruction">Từ tiếng Anh nào có nghĩa trên?</div>`;
 
   const optionsHtml = q.options.map((opt, i) => {
@@ -827,14 +866,21 @@ function renderQuiz() {
       else if (i === q.chosenIndex) cls += " wrong";
       else cls += " dim";
     }
-    return `<button class="quiz-option ${q.answered ? (opt.correct ? "correct" : i === q.chosenIndex ? "wrong" : "dim") : ""}" data-index="${i}" ${q.answered ? "disabled" : ""}>${opt.text}</button>`;
+    return `<button class="${cls}" data-index="${i}" ${q.answered ? "disabled" : ""}>${opt.text}</button>`;
   }).join("");
 
   const nextBtn = q.answered
-    ? `<button class="nav-button random" id="quiz-next-button" type="button">Câu tiếp theo →</button>`
+    ? `<button class="nav-button random" id="quiz-next-button" type="button">${qs.current >= qs.total - 1 ? "Xem kết quả →" : "Câu tiếp theo →"}</button>`
     : "";
 
   quizArea.innerHTML = `
+    <div class="quiz-progress-label">
+      <span>Câu ${qs.current + 1} / ${qs.total}</span>
+      <span>✓ ${qs.correct} &nbsp; ✗ ${qs.wrong}</span>
+    </div>
+    <div class="quiz-progress-bar-wrap">
+      <div class="quiz-progress-bar-fill" style="width:${progressPct}%"></div>
+    </div>
     <div class="quiz-card">
       <div class="quiz-type-pill">${q.type === "word-to-meaning" ? "Từ → Nghĩa" : "Nghĩa → Từ"}</div>
       ${prompt}
@@ -848,7 +894,6 @@ function renderQuiz() {
     <button class="nav-button quiz-toggle-exit" id="quiz-toggle-button" type="button">✕ Thoát Quiz</button>
   `;
 
-  // Bind option clicks
   quizArea.querySelectorAll(".quiz-option").forEach((btn, i) => {
     btn.addEventListener("click", () => handleQuizAnswer(i));
   });
@@ -865,7 +910,6 @@ function handleQuizAnswer(chosenIndex) {
   q.answeredCorrect = q.options[chosenIndex].correct;
 
   if (!q.answeredCorrect) {
-    // Mark correct word as difficult
     const key = String(q.correct.id);
     state.difficultWords.add(key);
     state.sessionDifficult.add(key);
@@ -874,12 +918,20 @@ function handleQuizAnswer(chosenIndex) {
     updateSessionUi();
   }
 
+  // Track score
+  if (state.quizSession) {
+    state.quizSession.current++;
+    if (q.answeredCorrect) state.quizSession.correct++;
+    else state.quizSession.wrong++;
+  }
+
   renderQuiz();
 }
 
 function toggleQuizMode() {
   state.quizMode = !state.quizMode;
   state.quizQuestion = null;
+  state.quizSession = null;
   renderQuiz();
 }
 
